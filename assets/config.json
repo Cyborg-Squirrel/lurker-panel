@@ -1,5 +1,6 @@
 {
   "clientId": "",
-  "clientSecret": "",
+  "channel": "",
+  "username": "",
   "oauthCallbackPort": 3000
 }
