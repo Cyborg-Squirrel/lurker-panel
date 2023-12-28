@@ -287,7 +287,8 @@ class TwitchApiClientImpl extends TwitchApiClient {
 
     final config = getIt<LurkerPanelConfig>();
     final connectionCompleter = Completer.sync();
-    _twitchChat ??= TwitchChat(config.channel, config.username, _token!.accessToken, onConnected: () {
+    _twitchChat ??= TwitchChat(
+        config.channel, config.username, _token!.accessToken, onConnected: () {
       if (!connectionCompleter.isCompleted) {
         connectionCompleter.complete();
       }

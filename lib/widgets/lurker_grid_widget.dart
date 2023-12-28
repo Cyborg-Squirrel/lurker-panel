@@ -32,11 +32,11 @@ class LurkerGridWidget extends StatelessWidget {
             final height = MediaQuery.of(context).size.height;
             final ratio = width / height;
             int crossAxisCount = 5;
-            if (ratio < 1.5 && ratio > 1) {
+            if (ratio < 5 && ratio > 1.4) {
               crossAxisCount = 5;
-            } else if (ratio >= 1.5) {
+            } else if (ratio >= 5) {
               crossAxisCount = 8;
-            } else if (ratio <= 1 && ratio > .6) {
+            } else if (ratio <= 1.4 && ratio > .5) {
               crossAxisCount = 3;
             } else {
               crossAxisCount = 1;
@@ -52,7 +52,8 @@ class LurkerGridWidget extends StatelessWidget {
                   children: List.generate(state.lurkerList.length, (index) {
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: getGridItem(context, index, state.lurkerList[index]),
+                      child:
+                          getGridItem(context, index, state.lurkerList[index]),
                     );
                   }),
                 ),

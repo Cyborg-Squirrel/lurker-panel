@@ -23,7 +23,8 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
 
   void _onChatMessage(dynamic message) async {
     if (message is ChatMessage) {
-      final lurkerInList = _lurkerList.where((l) => l.name.toLowerCase() == message.username.toLowerCase());
+      final lurkerInList = _lurkerList
+          .where((l) => l.name.toLowerCase() == message.username.toLowerCase());
       LurkerModel? model;
       if (lurkerInList.isNotEmpty) {
         final lurkerModel = lurkerInList.first;
@@ -33,7 +34,8 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
           lurkingStartedAt: lurkerModel.lurkingStartedAt,
           chatsSinceLurk: lurkerModel.chatsSinceLurk + 1,
         );
-        _lurkerList.removeWhere((l) => l.name.toLowerCase() == message.username.toLowerCase());
+        _lurkerList.removeWhere(
+            (l) => l.name.toLowerCase() == message.username.toLowerCase());
       }
 
       if (message.message.startsWith('!lurk')) {
@@ -45,14 +47,16 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
           chatsSinceLurk: 0,
         );
       } else if (message.message.startsWith('!unlurk')) {
-        _lurkerList.removeWhere((l) => l.name.toLowerCase() == message.username.toLowerCase());
+        _lurkerList.removeWhere(
+            (l) => l.name.toLowerCase() == message.username.toLowerCase());
         emit(LurkerGridState(lurkerList: _lurkerList));
         return;
       }
 
       if (model != null) {
         _lurkerList.add(model);
-        _lurkerList.sort((a, b) => a.lurkingStartedAt.compareTo(b.lurkingStartedAt));
+        _lurkerList
+            .sort((a, b) => a.lurkingStartedAt.compareTo(b.lurkingStartedAt));
         emit(LurkerGridState(lurkerList: _lurkerList));
       }
     }

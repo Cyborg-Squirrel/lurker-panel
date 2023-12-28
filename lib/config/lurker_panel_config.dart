@@ -4,7 +4,8 @@ part 'lurker_panel_config.g.dart';
 
 @JsonSerializable()
 class LurkerPanelConfig {
-  LurkerPanelConfig(this.clientId, this.channel, this.username, this.oauthCallbackPort);
+  LurkerPanelConfig(
+      this.clientId, this.channel, this.username, this.oauthCallbackPort);
 
   factory LurkerPanelConfig.fromJson(Map<String, dynamic> json) =>
       _$LurkerPanelConfigFromJson(json);
