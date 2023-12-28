@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:lurker_panel/cubits/lurker_grid_cubit.dart';
 import 'package:lurker_panel/model/lurker_model.dart';
@@ -79,10 +81,22 @@ Widget getGridItem(BuildContext context, int index, LurkerModel lurkerModel) {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Expanded(
-            child: Image.network(
-              lurkerModel.profileImageUrl!,
-              fit: BoxFit.cover,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(32),
+              child: SizedBox.fromSize(
+                size: const Size.fromRadius(24),
+                child: Image.network(
+                  lurkerModel.profileImageUrl!,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
+            // child: Center(
+            //   child: CircleAvatar(
+            // radius: 300,
+            // backgroundImage: NetworkImage(lurkerModel.profileImageUrl!),
+            //   ),
+            // ),
           ),
           Center(
             child: Container(
@@ -91,7 +105,6 @@ Widget getGridItem(BuildContext context, int index, LurkerModel lurkerModel) {
                 lurkerModel.name,
                 style:
                     const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-                // style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ),
