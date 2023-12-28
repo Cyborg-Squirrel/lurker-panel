@@ -33,12 +33,12 @@ class LurkerGridWidget extends StatelessWidget {
             final height = MediaQuery.of(context).size.height;
             final ratio = width / height;
             int crossAxisCount = 5;
-            if (ratio < 5 && ratio > 1.4) {
+            if (ratio > 1.4) {
               crossAxisCount = 5;
-            } else if (ratio >= 5) {
-              crossAxisCount = 8;
-            } else if (ratio <= 1.4 && ratio > .5) {
+            } else if (ratio > 1 && ratio <= 1.4) {
               crossAxisCount = 3;
+            } else if (ratio > .5 && ratio < 1) {
+              crossAxisCount = 2;
             } else {
               crossAxisCount = 1;
             }
@@ -71,18 +71,6 @@ class LurkerGridWidget extends StatelessWidget {
   }
 }
 
-void determineShape(int height, int width) {
-  final ratio = width / height;
-
-  if (ratio < 1.1 && ratio > .9) {
-    print('Square');
-  } else if (ratio > 1.1) {
-    print('Wide');
-  } else {
-    print('Tall');
-  }
-}
-
 Widget getGridItem(BuildContext context, int index, LurkerModel lurkerModel) {
   return GestureDetector(
     onTap: () {},
@@ -101,7 +89,9 @@ Widget getGridItem(BuildContext context, int index, LurkerModel lurkerModel) {
               padding: const EdgeInsets.all(4.0),
               child: Text(
                 lurkerModel.name,
-                style: const TextStyle(fontWeight: FontWeight.w700),
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                // style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ),
