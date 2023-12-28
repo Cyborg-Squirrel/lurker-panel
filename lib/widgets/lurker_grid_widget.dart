@@ -75,7 +75,9 @@ class LurkerGridWidget extends StatelessWidget {
 
 Widget getGridItem(BuildContext context, int index, LurkerModel lurkerModel) {
   return GestureDetector(
-    onTap: () {},
+    onTap: () {
+      getIt<LurkerGridCubit>().unlurk(lurkerModel);
+    },
     child: Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

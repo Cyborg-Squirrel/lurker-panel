@@ -5,10 +5,12 @@ import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:lurker_panel/config/lurker_panel_config.dart';
+import 'package:lurker_panel/twitch/api/twitch_get_moderators_api.dart';
 import 'package:lurker_panel/twitch/api/twitch_get_user_api.dart';
 import 'package:lurker_panel/twitch/api/twitch_oauth_token_validation_api.dart';
 import 'package:lurker_panel/twitch/json/twitch_api_token.dart';
 import 'package:lurker_panel/twitch/json/twitch_api_token_validation.dart';
+import 'package:lurker_panel/twitch/json/twitch_mod.dart';
 import 'package:lurker_panel/twitch/model/twitch_oauth_fragment.dart';
 import 'package:twitch_chat/twitch_chat.dart';
 
@@ -26,6 +28,8 @@ abstract class TwitchApiClient {
 
   Future<TwitchUser> getUser(String login);
 
+  Future<List<TwitchMod>> getMods();
+
   Future<Stream<dynamic>> getChatStream();
 }
 
@@ -33,7 +37,7 @@ class TwitchApiClientImpl extends TwitchApiClient {
   final _clientId = getIt<LurkerPanelConfig>().clientId;
   TwitchApiToken? _token;
 
-  final _requiredScopes = ['chat:read'];
+  final _requiredScopes = ['chat:read', 'moderation:read'];
 
   /// Http server to listen for the OAuth callback
   HttpServer? _httpServer;
@@ -161,6 +165,36 @@ class TwitchApiClientImpl extends TwitchApiClient {
     print(
         'Error ${response.statusCode} requesting user from Twitch ${response.body}');
     throw Exception('Unable to get user');
+  }
+
+  @override
+  Future<List<TwitchMod>> getMods() async {
+    final tokenIsValid = await _validateToken();
+    if (!tokenIsValid) {
+      print('Token is invalid');
+      throw Exception('Invalid token. Unable to make Twitch api request.');
+    }
+
+    final user = await getUser(getIt<LurkerPanelConfig>().channel);
+    final getModsApi = TwitchGetModeratorsApi(user.id);
+    final response = await getModsApi.execute(_token!);
+
+    if (response.statusCode > 199 && response.statusCode < 300) {
+      print('Got mod list from Twitch!');
+      final responseJson = jsonDecode(response.body);
+      final jsonModList = responseJson['data'] as List;
+      List<TwitchMod> modList = [];
+      for (var i = 0; i < jsonModList.length; i++) {
+        modList.add(TwitchMod.fromJson(jsonModList[i]));
+      }
+      return modList;
+    } else if (response.statusCode == 503) {
+      /// TODO we can retry once if we get a status code 503
+    }
+
+    print(
+        'Error ${response.statusCode} requesting channel mods from Twitch ${response.body}');
+    throw Exception('Unable to get mods');
   }
 
   void _onHttpRequestReceived(HttpRequest request) async {

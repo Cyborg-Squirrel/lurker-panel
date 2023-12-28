@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lurker_panel/config/lurker_panel_config.dart';
 import 'package:lurker_panel/model/lurker_model.dart';
+import 'package:lurker_panel/twitch/json/twitch_mod.dart';
 import 'package:lurker_panel/twitch/twitch_api_client.dart';
 import 'package:twitch_chat/twitch_chat.dart';
 
@@ -15,10 +17,13 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
   final _twitchApiClient = getIt<TwitchApiClient>();
   StreamSubscription? _chatStreamSub;
   final _lurkerList = <LurkerModel>[];
+  final _mods = <TwitchMod>[];
+  final _config = getIt<LurkerPanelConfig>();
 
   void onLoad() async {
     final stream = await _twitchApiClient.getChatStream();
     _chatStreamSub = stream.listen(_onChatMessage);
+    _mods.addAll(await _twitchApiClient.getMods());
   }
 
   void _onChatMessage(dynamic message) async {
@@ -47,6 +52,21 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
           chatsSinceLurk: 0,
         );
       } else if (message.message.startsWith('!unlurk')) {
+        final userInModList =
+            _mods.where((m) => m.username == message.username);
+        final messageString = message.message;
+        if ((userInModList.isNotEmpty ||
+                message.username == _config.channel.toLowerCase()) &&
+            messageString.length > '!unlurk'.length) {
+          final unlurkUserString = messageString.split(' ').last.trim();
+          if (unlurkUserString.isNotEmpty) {
+            _lurkerList.removeWhere(
+                (l) => l.name.toLowerCase() == unlurkUserString.toLowerCase());
+            emit(LurkerGridState(lurkerList: _lurkerList));
+            return;
+          }
+        }
+
         _lurkerList.removeWhere(
             (l) => l.name.toLowerCase() == message.username.toLowerCase());
         emit(LurkerGridState(lurkerList: _lurkerList));
@@ -68,5 +88,10 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
 
   void dispose() {
     _chatStreamSub?.cancel();
+  }
+
+  void unlurk(LurkerModel lurkerModel) {
+    _lurkerList.remove(lurkerModel);
+    emit(LurkerGridState(lurkerList: _lurkerList));
   }
 }
