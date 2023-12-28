@@ -13,14 +13,15 @@ class LurkerGridWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const title = 'Lurkers';
+    // const title = 'Lurkers';
     final cubit = getIt<LurkerGridCubit>()..onLoad();
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text(title),
-      ),
+      // TODO idk if I want to keep this
+      // appBar: AppBar(
+      //   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      //   title: const Text(title),
+      // ),
       body: StreamBuilder(
         stream: cubit.stream,
         initialData: cubit.state,
@@ -98,7 +99,10 @@ Widget getGridItem(BuildContext context, int index, LurkerModel lurkerModel) {
           Center(
             child: Container(
               padding: const EdgeInsets.all(4.0),
-              child: Text(lurkerModel.name),
+              child: Text(
+                lurkerModel.name,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
             ),
           ),
         ],
