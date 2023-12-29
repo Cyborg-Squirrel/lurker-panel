@@ -326,7 +326,11 @@ class TwitchApiClientImpl extends TwitchApiClient {
       if (!connectionCompleter.isCompleted) {
         connectionCompleter.complete();
       }
+    }, onError: () {
+      _twitchChat?.close();
+      _twitchChat = null;
     });
+
     _twitchChat?.connect();
 
     await connectionCompleter.future;

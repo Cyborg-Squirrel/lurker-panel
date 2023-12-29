@@ -3,8 +3,8 @@ class LurkerModel {
     required this.profileImageUrl,
     required this.name,
     required this.lurkingStartedAt,
-    required this.chatsSinceLurk,
-  });
+    required int chatsSinceLurk,
+  }) : _chatsSinceLurk = chatsSinceLurk;
 
   /// Url to the chatter's profile image, null if not available
   final String? profileImageUrl;
@@ -16,5 +16,11 @@ class LurkerModel {
   final DateTime lurkingStartedAt;
 
   /// Could be used to determine if they are no longer lurking
-  final int chatsSinceLurk;
+  int _chatsSinceLurk;
+
+  int get chatsSinceLurk => _chatsSinceLurk;
+
+  void incrementChatsSinceLurk() {
+    _chatsSinceLurk++;
+  }
 }

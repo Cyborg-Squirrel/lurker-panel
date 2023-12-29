@@ -23,6 +23,9 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
   final _mods = <TwitchMod>[];
   final _config = getIt<LurkerPanelConfig>();
 
+  /// Counter for exponential backoff on reconnections
+  int _reconnects = 0;
+
   void onLoad() async {
     await _listenToChatStream();
     _mods.addAll(await _twitchApiClient.getMods());
@@ -35,43 +38,41 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
     _chatStreamSub = stream.listen(_onChatMessage, onError: (e) {
       print('Error in Twitch chat stream');
       print(e.toString());
+      _resetChat();
     });
+  }
+
+  Future<void> _resetChat() async {
+    if (_reconnects < 9) {
+      _reconnects++;
+    }
+
+    await _chatStreamSub?.cancel();
+    await Future<void>.delayed(Duration(seconds: 2 ^ _reconnects));
+    await _listenToChatStream();
   }
 
   void _onChatMessage(dynamic message) async {
     if (message is ChatMessage) {
       print('Chat message received');
       print('${_lurkerList.length} lurkers');
+      final messageString = message.message.trim();
 
-      final lurkerInList = _lurkerList
-          .where((l) => l.name.toLowerCase() == message.username.toLowerCase());
-      LurkerModel? model;
-      if (lurkerInList.isNotEmpty) {
-        final lurkerModel = lurkerInList.first;
-        model = LurkerModel(
-          profileImageUrl: lurkerModel.profileImageUrl,
-          name: message.username,
-          lurkingStartedAt: lurkerModel.lurkingStartedAt,
-          chatsSinceLurk: lurkerModel.chatsSinceLurk + 1,
-        );
-        _lurkerList.removeWhere(
-            (l) => l.name.toLowerCase() == message.username.toLowerCase());
-      }
-
-      if (message.message.startsWith(_lurkCommand)) {
+      if (messageString.startsWith(_lurkCommand)) {
         print('${message.username} is now lurking');
         final userModel = await _twitchApiClient.getUser(message.username);
-        model = LurkerModel(
+        final model = LurkerModel(
           profileImageUrl: userModel.profileImageUrl,
           name: userModel.displayName,
           lurkingStartedAt: DateTime.now(),
           chatsSinceLurk: 0,
         );
-      } else if (message.message.startsWith(_unlurkCommand)) {
+        _lurkerList.add(model);
+        _update();
+      } else if (messageString.startsWith(_unlurkCommand)) {
         print('${message.username} used the unlurk command');
         final userInModList =
             _mods.where((m) => m.username == message.username);
-        final messageString = message.message;
 
         if ((userInModList.isNotEmpty ||
                 message.username == _config.channel.toLowerCase()) &&
@@ -81,28 +82,33 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
             print('${message.username} unlurked $unlurkUserString');
             _lurkerList.removeWhere(
                 (l) => l.name.toLowerCase() == unlurkUserString.toLowerCase());
-            emit(LurkerGridState(lurkerList: _lurkerList));
+            _update();
+            return;
+          } else {
             return;
           }
         }
 
         _lurkerList.removeWhere(
             (l) => l.name.toLowerCase() == message.username.toLowerCase());
-        emit(LurkerGridState(lurkerList: _lurkerList));
-        return;
-      }
-
-      if (model != null) {
-        _lurkerList.add(model);
-        _lurkerList
-            .sort((a, b) => a.lurkingStartedAt.compareTo(b.lurkingStartedAt));
-        emit(LurkerGridState(lurkerList: _lurkerList));
+        _update();
+      } else {
+        for (var i = 0; i < _lurkerList.length; i++) {
+          if (_lurkerList[i].name.toLowerCase() == message.username) {
+            _lurkerList[i].incrementChatsSinceLurk();
+            _update();
+            return;
+          }
+        }
       }
     }
   }
 
-  void onScreenResized(Size newSize) {
-    // TODO: implement onScreenResized
+  void _update() {
+    print('${_lurkerList.length} lurkers');
+    _lurkerList
+        .sort((a, b) => a.lurkingStartedAt.compareTo(b.lurkingStartedAt));
+    emit(LurkerGridState(lurkerList: _lurkerList));
   }
 
   void dispose() {
