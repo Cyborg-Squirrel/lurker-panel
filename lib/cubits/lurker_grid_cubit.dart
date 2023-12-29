@@ -14,6 +14,9 @@ import '../states/lurker_grid_state.dart';
 class LurkerGridCubit extends Cubit<LurkerGridState> {
   LurkerGridCubit() : super(LurkerGridState.empty());
 
+  final _lurkCommand = '!lurk';
+  final _unlurkCommand = '!unlurk';
+
   final _twitchApiClient = getIt<TwitchApiClient>();
   StreamSubscription? _chatStreamSub;
   final _lurkerList = <LurkerModel>[];
@@ -21,13 +24,25 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
   final _config = getIt<LurkerPanelConfig>();
 
   void onLoad() async {
-    final stream = await _twitchApiClient.getChatStream();
-    _chatStreamSub = stream.listen(_onChatMessage);
+    await _listenToChatStream();
     _mods.addAll(await _twitchApiClient.getMods());
+  }
+
+  Future<void> _listenToChatStream() async {
+    print('Listening to Twitch chat...');
+    final stream = await _twitchApiClient.getChatStream();
+    await _chatStreamSub?.cancel();
+    _chatStreamSub = stream.listen(_onChatMessage, onError: (e) {
+      print('Error in Twitch chat stream');
+      print(e.toString());
+    });
   }
 
   void _onChatMessage(dynamic message) async {
     if (message is ChatMessage) {
+      print('Chat message received');
+      print('${_lurkerList.length} lurkers');
+
       final lurkerInList = _lurkerList
           .where((l) => l.name.toLowerCase() == message.username.toLowerCase());
       LurkerModel? model;
@@ -43,7 +58,8 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
             (l) => l.name.toLowerCase() == message.username.toLowerCase());
       }
 
-      if (message.message.startsWith('!lurk')) {
+      if (message.message.startsWith(_lurkCommand)) {
+        print('${message.username} is now lurking');
         final userModel = await _twitchApiClient.getUser(message.username);
         model = LurkerModel(
           profileImageUrl: userModel.profileImageUrl,
@@ -51,15 +67,18 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
           lurkingStartedAt: DateTime.now(),
           chatsSinceLurk: 0,
         );
-      } else if (message.message.startsWith('!unlurk')) {
+      } else if (message.message.startsWith(_unlurkCommand)) {
+        print('${message.username} used the unlurk command');
         final userInModList =
             _mods.where((m) => m.username == message.username);
         final messageString = message.message;
+
         if ((userInModList.isNotEmpty ||
                 message.username == _config.channel.toLowerCase()) &&
-            messageString.length > '!unlurk'.length) {
+            messageString.length > _unlurkCommand.length) {
           final unlurkUserString = messageString.split(' ').last.trim();
           if (unlurkUserString.isNotEmpty) {
+            print('${message.username} unlurked $unlurkUserString');
             _lurkerList.removeWhere(
                 (l) => l.name.toLowerCase() == unlurkUserString.toLowerCase());
             emit(LurkerGridState(lurkerList: _lurkerList));

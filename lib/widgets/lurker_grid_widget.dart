@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:lurker_panel/cubits/lurker_grid_cubit.dart';
 import 'package:lurker_panel/model/lurker_model.dart';
 import 'package:lurker_panel/states/lurker_grid_state.dart';
-import 'package:lurker_panel/widgets/window_resize_notifier_widget.dart';
 
 import '../di/dependency_manager.dart';
 
@@ -35,7 +34,9 @@ class LurkerGridWidget extends StatelessWidget {
             final height = MediaQuery.of(context).size.height;
             final ratio = width / height;
             int crossAxisCount = 5;
-            if (ratio > 1.4) {
+            if (ratio > 6) {
+              crossAxisCount = 8;
+            } else if (ratio > 1.4) {
               crossAxisCount = 5;
             } else if (ratio > 1 && ratio <= 1.4) {
               crossAxisCount = 3;
@@ -48,18 +49,14 @@ class LurkerGridWidget extends StatelessWidget {
             print('crossAxisCount $crossAxisCount');
 
             if (state is LurkerGridState) {
-              return WindowResizeNotifierWidget(
-                onWindowResizedCallback: cubit.onScreenResized,
-                child: GridView.count(
-                  crossAxisCount: crossAxisCount,
-                  children: List.generate(state.lurkerList.length, (index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child:
-                          getGridItem(context, index, state.lurkerList[index]),
-                    );
-                  }),
-                ),
+              return GridView.count(
+                crossAxisCount: crossAxisCount,
+                children: List.generate(state.lurkerList.length, (index) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: getGridItem(context, index, state.lurkerList[index]),
+                  );
+                }),
               );
             }
           }
