@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lurker_panel/config/lurker_panel_config.dart';
 import 'package:lurker_panel/model/lurker_model.dart';
