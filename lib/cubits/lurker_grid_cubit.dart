@@ -58,6 +58,14 @@ class LurkerGridCubit extends Cubit<LurkerGridState> {
       final messageString = message.message.trim();
 
       if (messageString.startsWith(_lurkCommand)) {
+        if (_lurkerList
+            .where((l) =>
+                l.name.toLowerCase() == message.displayName.toLowerCase())
+            .isNotEmpty) {
+          print('User is already lurking. Ignore.');
+          return;
+        }
+
         print('${message.username} is now lurking');
         final userModel = await _twitchApiClient.getUser(message.username);
         final model = LurkerModel(

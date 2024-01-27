@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:lurker_panel/config/lurker_panel_config.dart';
 import 'package:lurker_panel/twitch/api/twitch_get_moderators_api.dart';
 import 'package:lurker_panel/twitch/api/twitch_get_user_api.dart';
@@ -17,7 +19,6 @@ import 'package:twitch_chat/twitch_chat.dart';
 import '../di/dependency_manager.dart';
 import 'api/twitch_api.dart';
 import 'json/twitch_user.dart';
-import 'package:http/http.dart' as http;
 
 abstract class TwitchApiClient {
   Future get twitchOAuthFuture;
@@ -62,8 +63,14 @@ class TwitchApiClientImpl extends TwitchApiClient {
     await _httpServer?.close();
     _twitchChat?.close();
     _twitchOAuthCompleter = Completer.sync();
-    _httpServer = await HttpServer.bind(InternetAddress.anyIPv4, _port);
-    _httpServer!.listen(_onHttpRequestReceived);
+
+    if (kIsWeb) {
+      // TODO: init flutter web handling of OAuth
+    } else {
+      print('Starting web server...');
+      _httpServer = await HttpServer.bind(InternetAddress.anyIPv4, _port);
+      _httpServer!.listen(_onHttpRequestReceived);
+    }
   }
 
   @override
